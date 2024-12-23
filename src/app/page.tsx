@@ -26,11 +26,11 @@ export default function Home() {
     console.log("filtering advocates...");
     const filteredAdvocates = advocates.filter((advocate) => {
       return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm)
+        advocate.firstName.match(new RegExp(searchTerm, 'i')) ||
+        advocate.lastName.match(new RegExp(searchTerm, 'i')) ||
+        advocate.city.match(new RegExp(searchTerm, 'i')) ||
+        advocate.degree.match(new RegExp(searchTerm, 'i')) ||
+        advocate.specialties.some(specialty => specialty.match(new RegExp(searchTerm, 'i')))
       );
     });
 
@@ -38,8 +38,8 @@ export default function Home() {
   };
 
   const onClick = () => {
-    console.log(advocates);
     setFilteredAdvocates(advocates);
+    setSearchTerm('')
   };
 
   return (
