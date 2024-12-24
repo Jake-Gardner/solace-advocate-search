@@ -14,20 +14,28 @@ import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
 import Chip from '@mui/material/Chip'
+import TablePagination from '@mui/material/TablePagination'
+
+const PAGE_SIZE = 10
 
 export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     const fetchAdvocates = async () => {
-      const response = await fetch("/api/advocates?term=" + searchTerm)
+      const response = await fetch('/api/advocates?' + new URLSearchParams({
+          term: searchTerm,
+          limit: PAGE_SIZE.toString(),
+          offset: (page * PAGE_SIZE).toString()
+      }).toString())
       const jsonResponse = await response.json()
       setAdvocates(jsonResponse.data)
     }
 
     fetchAdvocates()
-  }, [searchTerm]);
+  }, [searchTerm, page]);
 
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.currentTarget.value)
@@ -36,6 +44,10 @@ export default function Home() {
   const onClearClick = () => {
     setSearchTerm('')
   };
+
+  const onPageChange = (_event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
 
   const formatPhoneNumber = (phoneNumber: number) => {
     const matches = phoneNumber.toString().match(/^(\d{3})(\d{3})(\d{4})/)
@@ -102,6 +114,14 @@ export default function Home() {
           </TableBody>
         </Table>
       </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[]}
+        component="div"
+        count={-1}
+        rowsPerPage={PAGE_SIZE}
+        page={page}
+        onPageChange={onPageChange}
+      />
     </main>
   );
 }
