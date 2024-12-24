@@ -1,91 +1,127 @@
 "use client";
 
+import { Advocate } from '@/types';
 import { useEffect, useState } from "react";
+import Typography from '@mui/material/Typography'
+import TextField from '@mui/material/TextField'
+import InputAdornment from '@mui/material/InputAdornment'
+import IconButton from '@mui/material/IconButton'
+import ClearIcon from '@mui/icons-material/Clear'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TableRow from '@mui/material/TableRow'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import Chip from '@mui/material/Chip'
+import TablePagination from '@mui/material/TablePagination'
+
+const PAGE_SIZE = 10
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [advocates, setAdvocates] = useState<Advocate[]>([]);
+  const [searchTerm, setSearchTerm] = useState('')
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+    const fetchAdvocates = async () => {
+      const response = await fetch('/api/advocates?' + new URLSearchParams({
+          term: searchTerm,
+          limit: PAGE_SIZE.toString(),
+          offset: (page * PAGE_SIZE).toString()
+      }).toString())
+      const jsonResponse = await response.json()
+      setAdvocates(jsonResponse.data)
+    }
 
-  const onChange = (e) => {
-    const searchTerm = e.target.value;
+    fetchAdvocates()
+  }, [searchTerm, page]);
 
-    document.getElementById("search-term").innerHTML = searchTerm;
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+  const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.currentTarget.value)
   };
 
-  const onClick = () => {
-    console.log(advocates);
-    setFilteredAdvocates(advocates);
+  const onClearClick = () => {
+    setSearchTerm('')
   };
+
+  const onPageChange = (_event: unknown, newPage: number) => {
+    setPage(newPage)
+  }
+
+  const formatPhoneNumber = (phoneNumber: number) => {
+    const matches = phoneNumber.toString().match(/^(\d{3})(\d{3})(\d{4})/)
+    if (matches) {
+      return `(${matches[1]}) ${matches[2]}-${matches[3]}`
+    }
+    return phoneNumber.toString()
+  }
 
   return (
     <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
+      <Typography variant="h4">
+        Solace Advocates
+      </Typography>
       <br />
       <br />
       <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
+        <TextField
+          label="Search"
+          value={searchTerm}
+          onChange={onSearchChange}
+          slotProps={{
+            input: {
+              endAdornment: <InputAdornment position="end">
+                {searchTerm && <IconButton onClick={onClearClick}>
+                  <ClearIcon />
+                </IconButton>}
+              </InputAdornment>
+            },
+          }}
+        />
       </div>
       <br />
       <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>First Name</TableCell>
+              <TableCell>Last Name</TableCell>
+              <TableCell>City</TableCell>
+              <TableCell>Degree</TableCell>
+              <TableCell>Specialties</TableCell>
+              <TableCell>Years of Experience</TableCell>
+              <TableCell>Phone Number</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {advocates.map((advocate) => (
+              <TableRow key={advocate.id}>
+                <TableCell>{advocate.firstName}</TableCell>
+                <TableCell>{advocate.lastName}</TableCell>
+                <TableCell>{advocate.city}</TableCell>
+                <TableCell>{advocate.degree}</TableCell>
+                <TableCell>
                   {advocate.specialties.map((s) => (
-                    <div>{s}</div>
+                    <Chip key={s} label={s} sx={{ margin: '1px' }} />
                   ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                </TableCell>
+                <TableCell>{advocate.yearsOfExperience}</TableCell>
+                <TableCell>{formatPhoneNumber(advocate.phoneNumber)}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <TablePagination
+        rowsPerPageOptions={[]}
+        component="div"
+        count={-1}
+        rowsPerPage={PAGE_SIZE}
+        page={page}
+        onPageChange={onPageChange}
+      />
     </main>
   );
 }
