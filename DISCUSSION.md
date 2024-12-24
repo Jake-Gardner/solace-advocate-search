@@ -1,0 +1,7 @@
+# Future improvements
+- Searching for text with the `specialties` field was easy when the search was performed on the frontend. But after I moved search functionality to the backend, I didn't quite have enough time to perform that same search in the `jsonb` field of the Postgres db.
+- A loading spinner could be added to the table when fetching new results.
+- The search input field could be debounced. At the moment, it sends a new fetch request for every keystroke in the field. A simple `setTimeout` could limit the number of requests to once per second or half second.
+- The table could have sorting functionality added. With the search performed on the backend, it would be trivial to add sorting parameters to the existing query, it would just require interactive headers on the frontend to select the sorting column and direction.
+- Since the search is being performed on the backend, the front end no longer knows how many total results there are, which is why the pagination controls go indefinitely, and don't know when the user is at the end of the results. This could either be supplied by a separate API call, or ideally, by including metadata in the existing API call.
+- The table UI could certainly be cleaned up a bit. At the moment it is quite cluttered by text, so this could have another design pass.
