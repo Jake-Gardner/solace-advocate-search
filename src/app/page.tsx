@@ -17,40 +17,23 @@ import Chip from '@mui/material/Chip'
 
 export default function Home() {
   const [advocates, setAdvocates] = useState<Advocate[]>([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState<Advocate[]>([]);
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
-      response.json().then((jsonResponse) => {
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      });
-    });
-  }, []);
+    const fetchAdvocates = async () => {
+      const response = await fetch("/api/advocates?term=" + searchTerm)
+      const jsonResponse = await response.json()
+      setAdvocates(jsonResponse.data)
+    }
+
+    fetchAdvocates()
+  }, [searchTerm]);
 
   const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const searchTerm = e.currentTarget.value;
-
-    setSearchTerm(searchTerm)
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.match(new RegExp(searchTerm, 'i')) ||
-        advocate.lastName.match(new RegExp(searchTerm, 'i')) ||
-        advocate.city.match(new RegExp(searchTerm, 'i')) ||
-        advocate.degree.match(new RegExp(searchTerm, 'i')) ||
-        advocate.specialties.some(specialty => specialty.match(new RegExp(searchTerm, 'i')))
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+    setSearchTerm(e.currentTarget.value)
   };
 
   const onClearClick = () => {
-    setFilteredAdvocates(advocates);
     setSearchTerm('')
   };
 
@@ -101,7 +84,7 @@ export default function Home() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredAdvocates.map((advocate) => (
+            {advocates.map((advocate) => (
               <TableRow key={advocate.id}>
                 <TableCell>{advocate.firstName}</TableCell>
                 <TableCell>{advocate.lastName}</TableCell>
